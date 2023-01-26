@@ -9,113 +9,105 @@ GLfloat camZ = 0.0;
 
 //GLfloat rotate = 0.0;
 
+									/*  COMMON FUNCTIONS  */
+//////////////////////////////////////////////////////////////////////////////////////////////////////////
+/*______________________________________________________________________________________________________*/
+
+void enableLighting() {
+	GLfloat light_ambient[] = { 0.0, 0.0, 0.0, 1.0 };
+	GLfloat light_diffuse[] = { 1.0, 1.0, 1.0, 1.0 };
+	GLfloat light_specular[] = { 1.0, 1.0, 1.0, 1.0 };
+	GLfloat light_position[] = { 0.0, 50.0, 0.0, 1.0 };
+
+	glLightfv(GL_LIGHT0, GL_AMBIENT, light_ambient);
+	glLightfv(GL_LIGHT0, GL_DIFFUSE, light_diffuse);
+	glLightfv(GL_LIGHT0, GL_SPECULAR, light_specular);
+	glLightfv(GL_LIGHT0, GL_POSITION, light_position);
+
+	glMaterialf(GL_FRONT, GL_AMBIENT, 128.0f);
+	glMaterialfv(GL_FRONT, GL_SPECULAR, light_ambient);
+	glColorMaterial(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE);
+
+	glEnable(GL_LIGHTING);
+	glEnable(GL_LIGHT0);
+	glEnable(GL_COLOR_MATERIAL);
+}
 
 void drawAxes() {
 	glLineWidth(2);
 	glBegin(GL_LINES);
-	//X-Axis
 	glColor3f(1, 0, 0);
 	glVertex3f(-200, 0, 0);
 	glVertex3f(200, 0, 0);
-
-	//Y-Axis
 	glColor3f(0, 1, 0);
 	glVertex3f(0, 200, 0);
 	glVertex3f(0, -200, 0);
-
-	//Z-Axis
 	glColor3f(0, 0, 1);
 	glVertex3f(0, 0, -200);
 	glVertex3f(0, 0, 200);
 	glEnd();
 }
 
-void drawGrid(int gridSpan) {
-	GLfloat step = 1;
-	GLint line;
+										/*  COMMON SHAPES  */
+//////////////////////////////////////////////////////////////////////////////////////////////////////////
+/*______________________________________________________________________________________________________*/
 
-	glColor3f(0.2, 0.2, 0.2);
-	glLineWidth(1);
-	glBegin(GL_LINES);
-	for (line = -gridSpan; line <= gridSpan; line += step) {
-		glVertex3f(line, -0.2, -gridSpan);
-		glVertex3f(line, -0.2, gridSpan);
 
-		glVertex3f(-gridSpan, -0.2, line);
-		glVertex3f(gridSpan, -0.2, line);
+void DrawCircle(float r) {
+	int i, triangles = 100;
+	GLfloat x = 0.0f, y = 0.0f;
+	glBegin(GL_TRIANGLE_FAN);
+	glVertex2f(x, y);
+	for (i = 0; i <= triangles; i++) {
+		glVertex2f(x + (r * cos(i * 2 * PI / triangles)),
+			y + (r * sin(i * 2 * PI / triangles)));
 	}
 	glEnd();
+}
+
+void drawCylinder(GLfloat radius, GLfloat height) {
+	GLUquadricObj* quadratic;
+	quadratic = gluNewQuadric();
+	gluCylinder(quadratic, radius, radius, height, 100, 100);
+	DrawCircle(radius);
+	glTranslatef(0, 0, height);
+	DrawCircle(radius);
 }
 
 void draw2DRectangle(float w, float h) {
 	glBegin(GL_QUADS);
 	glVertex3f(-w / 2, -h / 2, 0);
-	glVertex3f( w / 2, -h / 2, 0);
-	glVertex3f( w / 2,  h / 2, 0);
-	glVertex3f(-w / 2,  h / 2, 0);
-	glEnd();
-}
-
-void draw2DStage(float w1, float w2, float h1, float h2, float distance) {
-
-	float h_diff = fabsf(h2 - h1);
-	
-	float theta = atan(h_diff / distance);
-
-	float L = h_diff / sin(theta);
-
-	glBegin(GL_POLYGON);
-	glVertex3f(-w1 / 2, 0, 0);
-	glVertex3f( w1 / 2, 0, 0);
-	glVertex3f( w2 / 2, L, 0);
-	glVertex3f(-w2 / 2, L, 0);
+	glVertex3f(w / 2, -h / 2, 0);
+	glVertex3f(w / 2, h / 2, 0);
+	glVertex3f(-w / 2, h / 2, 0);
 	glEnd();
 }
 
 void draw3DPanel(float w, float h, float t) {
-	glBegin(GL_QUADS);
-	glVertex3f( w / 2, -h / 2, t / 2);
-	glVertex3f( w / 2,  h / 2, t / 2);
-	glVertex3f(-w / 2,  h / 2, t / 2);
-	glVertex3f(-w / 2, -h / 2, t / 2);
-	glEnd();
+	glScalef(w, h, t);
+	glutSolidCube(1);
+}
 
-	glBegin(GL_QUADS);
-	glVertex3f( w / 2, -h / 2, -t / 2);
-	glVertex3f( w / 2,  h / 2, -t / 2);
-	glVertex3f(-w / 2,  h / 2, -t / 2);
-	glVertex3f(-w / 2, -h / 2, -t / 2);
-	glEnd();
+											/*  STAGE  */
+//////////////////////////////////////////////////////////////////////////////////////////////////////////
+/*______________________________________________________________________________________________________*/
 
-	glBegin(GL_QUADS);
-	glVertex3f(w / 2, -h / 2,  t / 2);
-	glVertex3f(w / 2, -h / 2, -t / 2);
-	glVertex3f(w / 2,  h / 2, -t / 2);
-	glVertex3f(w / 2,  h / 2,  t / 2);
 
-	glBegin(GL_QUADS);
-	glVertex3f(-w / 2, -h / 2,  t / 2);
-	glVertex3f(-w / 2, -h / 2, -t / 2);
-	glVertex3f(-w / 2,  h / 2, -t / 2);
-	glVertex3f(-w / 2,  h / 2,  t / 2);
-	glEnd();
+void draw2DStage(float w1, float w2, float h1, float h2, float distance) {
 
-	glBegin(GL_QUADS);
-	glVertex3f(-w / 2, h / 2,  t / 2);
-	glVertex3f(-w / 2, h / 2, -t / 2);
-	glVertex3f( w / 2, h / 2, -t / 2);
-	glVertex3f( w / 2, h / 2,  t / 2);
-	glEnd();
+	float h_diff = fabsf(h2 - h1);
+	float theta = atan(h_diff / distance);
+	float L = h_diff / sin(theta);
 
-	glBegin(GL_QUADS);
-	glVertex3f(-w / 2, -h / 2,  t / 2);
-	glVertex3f(-w / 2, -h / 2, -t / 2);
-	glVertex3f( w / 2, -h / 2, -t / 2);
-	glVertex3f( w / 2, -h / 2,  t / 2);
+	glBegin(GL_POLYGON);
+	glVertex3f(-w1 / 2, 0, 0);
+	glVertex3f(w1 / 2, 0, 0);
+	glVertex3f(w2 / 2, L, 0);
+	glVertex3f(-w2 / 2, L, 0);
 	glEnd();
 }
 
-void drawWalls(float fb_w, float lr_w, float h, float t ) {
+void drawWalls(float fb_w, float lr_w, float h, float t) {
 
 	//Wall left
 	glPushMatrix();
@@ -144,47 +136,356 @@ void drawWalls(float fb_w, float lr_w, float h, float t ) {
 	glPopMatrix();
 }
 
-void drawCircleFilled(float r) {
-	int i, triangles = 100;
+											/*  CHAIR  */
+//////////////////////////////////////////////////////////////////////////////////////////////////////////
+/*______________________________________________________________________________________________________*/
+
+
+void customCylinderForChair(GLfloat radius, GLfloat height) {
+	GLfloat x = 0.0;
+	GLfloat y = 0.0;
+	GLfloat angle = 0.0;
+	GLfloat angle_stepsize = 0.1;
+
+	glBegin(GL_QUAD_STRIP);
+	angle = 0.0;
+	while (angle < 0.5 * PI) {
+		x = radius * cos(angle);
+		y = radius * sin(angle);
+		glVertex3f(x, y, height);
+		glVertex3f(x, y, 0.0);
+		angle = angle + angle_stepsize;
+	}
+	glEnd();
+
+	glBegin(GL_POLYGON);
+	angle = 0.0;
+	while (angle < 0.5 * PI) {
+		x = radius * cos(angle);
+		y = radius * sin(angle);
+		glVertex3f(x, y, height);
+		angle = angle + angle_stepsize;
+	}
+	glVertex3f(radius, 0.0, height);
+	glEnd();
+}
+
+void drawCircleFilledForChair(float r) {
+	int i, triangles = 50;
 	GLfloat x = 0.0f, y = 0.0f;
 	glBegin(GL_TRIANGLE_FAN);
 	glVertex2f(x, y);
 	for (i = 0; i <= triangles; i++) {
-		glVertex2f(x + (r * cos(i * 2 * PI / triangles)),
-			y + (r * sin(i * 2 * PI / triangles)));
+		glVertex2f(x + (r * cos(i * 0.5 * PI / triangles)),
+			y + (r * sin(i * 0.5 * PI / triangles)));
 	}
 	glEnd();
 }
 
-void drawLinesOnFeild() {
-
-	glColor3f(1, 1, 1);
+void drawChairComponent() {
 	glPushMatrix();
-	glTranslatef(0, 3.001, 0);
-	glRotatef(90, 1, 0, 0);
-	drawCircleFilled(9);
-	glPopMatrix();
-
-	glColor3f(0, 1, 0);
-	glPushMatrix();
-	glTranslatef(0, 3.002, 0);
-	glRotatef(90, 1, 0, 0);
-	drawCircleFilled(8.5);
+	glTranslatef(0, 2, 0.5);
+	glScalef(8, 4, 1);
+	glutSolidCube(1);
 	glPopMatrix();
 
 	glPushMatrix();
-	glTranslatef(0, 3.003, 0);
-
-	glColor3f(1, 1, 1);
-	glLineWidth(5);
-	glRotatef(90, 1, 0, 0);
-	glRotatef(90, 0, 0, 1);
-	glBegin(GL_LINES);
-	glVertex2f(-37.5, 0);
-	glVertex2f(37.5, 0);
-	glEnd();
+	glTranslatef(0, 4, 0);
+	drawCylinder(4, 1);
 	glPopMatrix();
 }
+
+void drawChair() {
+	glColor3f(0.9, 0.8, 0.5);
+	//Chair Back Rester
+	glPushMatrix();
+	glTranslatef(0, 1, 0);
+	drawChairComponent();
+	glPopMatrix();
+
+	glColor3f(0.7, 0.6, 0.3);
+	//Chair Seat
+	glPushMatrix();
+	glTranslatef(0, 1, 0);
+	glRotatef(90, 1, 0, 0);
+	drawChairComponent();
+	glPopMatrix();
+
+	glColor3f(0.5, 0.5, 0.5);
+	//Left Hand Rest
+	glPushMatrix();
+	glTranslatef(-1, 1, 1);
+	glTranslatef(-2, 0, 0);
+	glRotatef(-90, 0, 1, 0);
+	customCylinderForChair(3, 1);
+	drawCircleFilledForChair(3);
+	glTranslatef(0, 0, 1);
+	drawCircleFilledForChair(3);
+	glPopMatrix();
+
+	//Right Hand Rest
+	glPushMatrix();
+	glTranslatef(6, 1, 1);
+	glTranslatef(-2, 0, 0);
+	glRotatef(-90, 0, 1, 0);
+	customCylinderForChair(3, 1);
+	drawCircleFilledForChair(3);
+	glTranslatef(0, 0, 1);
+	drawCircleFilledForChair(3);
+	glPopMatrix();
+}
+
+void drawSeatRow(int row_length) {
+	glColor3f(0.5, 1, 0.8);
+	glPushMatrix();
+	glScalef(row_length, 1, 2);
+	glutSolidCube(1);
+	glPopMatrix();
+
+	for (int i = -(row_length / 2) + 1; i <= (row_length / 2) - 1; i += 2) {
+		glPushMatrix();
+		glTranslatef(i, 0.5, -0.70);
+		glScalef(0.2, 0.2, 0.2);
+		drawChair();
+		glPopMatrix();
+	}
+}
+
+void allSeats() {
+
+	glPushMatrix();
+
+	glPushMatrix();
+	glTranslatef(0, 11, -42);
+	drawSeatRow(138);
+	glPopMatrix();
+
+	glTranslatef(0, 2, -3);
+	glPushMatrix();
+	glTranslatef(0, 11, -42);
+	drawSeatRow(148);
+	glPopMatrix();
+
+	glTranslatef(0, -4, 6);
+	glPushMatrix();
+	glTranslatef(0, 11, -42);
+	drawSeatRow(136);
+	glPopMatrix();
+
+	glPopMatrix();
+
+	/*
+	glPushMatrix();
+
+		glPushMatrix();
+		glTranslatef(0, 11, 42);
+		glRotatef(180, 0, 1, 0);
+		drawSeatRow(140);
+		glPopMatrix();
+
+		glTranslatef(0, 2, 3);
+		glPushMatrix();
+		glTranslatef(0, 11, 42);
+		glRotatef(180, 0, 1, 0);
+		drawSeatRow(150);
+		glPopMatrix();
+
+		glTranslatef(0, -4, -6);
+		glPushMatrix();
+		glTranslatef(0, 11, 42);
+		glRotatef(180, 0, 1, 0);
+		drawSeatRow(130);
+		glPopMatrix();
+
+	glPopMatrix();
+
+	glPushMatrix();
+
+		glPushMatrix();
+		glTranslatef(70, 11, 0);
+		glRotatef(-90, 0, 1, 0);
+		drawSeatRow(86);
+		glPopMatrix();
+
+		glTranslatef(3, 2, 0);
+		glPushMatrix();
+		glTranslatef(70, 11, 0);
+		glRotatef(-90, 0, 1, 0);
+		drawSeatRow(90);
+		glPopMatrix();
+
+		glTranslatef(-6, -4, 0);
+		glPushMatrix();
+		glTranslatef(70, 11, 0);
+		glRotatef(-90, 0, 1, 0);
+		drawSeatRow(78);
+		glPopMatrix();
+
+	glPopMatrix();
+	*/
+}
+
+											/*  GOAL POST  */
+//////////////////////////////////////////////////////////////////////////////////////////////////////////
+/*______________________________________________________________________________________________________*/
+
+
+void drawMesh(float width, float height, float spread) {
+
+	if (height > width) {
+		glRotatef(90, 0, 0, 1);
+		float temp = height;
+		height = width;
+		width = temp;
+	}
+
+	glPushMatrix();
+	glTranslatef(-width / 2, height / 2, 0);
+	float j = 0;
+	for (float i = 0; i < width; i += spread) {
+		glBegin(GL_LINES);
+		glVertex3f(i, 0, 0);
+		if (i >= height) {
+			glVertex3f(j, -height, 0);
+			j += spread;
+		}
+		else glVertex3f(0, -i, 0);
+		glEnd();
+	}
+
+	for (float i = 0; i < height; i += spread) {
+		glBegin(GL_LINES);
+		glVertex3f(width, -i, 0);
+		glVertex3f(j, -height, 0);
+		glEnd();
+		j += spread;
+	}
+	glPopMatrix();
+
+	glPushMatrix();
+	glRotatef(180, 0, 1, 0);
+	glTranslatef(-width / 2, height / 2, 0);
+	j = 0;
+	for (float i = 0; i < width; i += spread) {
+		glBegin(GL_LINES);
+		glVertex3f(i, 0, 0);
+		if (i >= height) {
+			glVertex3f(j, -height, 0);
+			j += spread;
+		}
+		else glVertex3f(0, -i, 0);
+		glEnd();
+	}
+
+	for (float i = 0; i < height; i += spread) {
+		glBegin(GL_LINES);
+		glVertex3f(width, -i, 0);
+		glVertex3f(j, -height, 0);
+		glEnd();
+		j += spread;
+	}
+	glPopMatrix();
+}
+
+void drawGoalPostBar(float width, float height, float thick) {
+
+	//Three Polls
+	glPushMatrix();
+	glTranslatef(-width / 2, 0, 0);
+	glScalef(1, (1 / thick) * height, 1);
+	glRotatef(-90, 1, 0, 0);
+	drawCylinder(thick, thick);
+	glPopMatrix();
+
+	glPushMatrix();
+	glTranslatef(width / 2, 0, 0);
+	glScalef(1, (1 / thick) * height, 1);
+	glRotatef(-90, 1, 0, 0);
+	drawCylinder(thick, thick);
+	glPopMatrix();
+
+	glPushMatrix();
+	glTranslatef(width / 2, height, 0);
+	glScalef((1 / thick) * width, 1, 1);
+	glRotatef(-90, 0, 1, 0);
+	drawCylinder(thick, thick);
+	glPopMatrix();
+
+	//Sphear for Sharp edges
+	glPushMatrix();
+	glTranslatef(width / 2, height, 0);
+	glutSolidSphere(thick, 100, 100);
+
+	glTranslatef(-width, 0, 0);
+	glutSolidSphere(thick, 100, 100);
+	glPopMatrix();
+}
+
+void drawGoal(float width, float thick) {
+
+	float height = width / 3, distance = width * 0.3;
+
+	//Front U bar
+	drawGoalPostBar(width, height, thick);
+
+	//Left Connector
+	glPushMatrix();
+	glTranslatef(-width / 2, height, 0);
+	glScalef(1, 1, (1 / thick) * distance);
+	glRotatef(-180, 1, 0, 0);
+	drawCylinder(thick, thick);
+	glPopMatrix();
+
+	//Right Connector
+	glPushMatrix();
+	glTranslatef(width / 2, height, 0);
+	glScalef(1, 1, (1 / thick) * distance);
+	glRotatef(-180, 1, 0, 0);
+	drawCylinder(thick, thick);
+	glPopMatrix();
+
+	//Back U bar
+	glPushMatrix();
+	glTranslatef(0, 0, -distance);
+	drawGoalPostBar(width, height, thick);
+	glPopMatrix();
+
+	glColor3f(0.95, 0.95, 1);
+	float spread = 0.5;
+	glLineWidth(2);
+	//Mesh Back
+	glPushMatrix();
+	glTranslatef(0, height / 2, -distance);
+	drawMesh(width, height, spread);
+	glPopMatrix();
+
+	//Mesh Left
+	glPushMatrix();
+	glTranslatef(-width / 2, height / 2, -distance / 2);
+	glRotatef(90, 0, 1, 0);
+	drawMesh(distance, height, spread);
+	glPopMatrix();
+
+	//Mesh Right
+	glPushMatrix();
+	glTranslatef(width / 2, height / 2, -distance / 2);
+	glRotatef(90, 0, 1, 0);
+	drawMesh(distance, height, spread);
+	glPopMatrix();
+
+	//Mesh Top
+	glPushMatrix();
+	glTranslatef(0, height, -distance / 2);
+	glRotatef(90, 1, 0, 0);
+	drawMesh(width, distance, spread);
+	glPopMatrix();
+}
+
+
+										    /*  DISPLAY  */
+//////////////////////////////////////////////////////////////////////////////////////////////////////////
+/*______________________________________________________________________________________________________*/
+
 
 void display() {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -192,13 +493,13 @@ void display() {
 	glLoadIdentity();
 
 	glPushMatrix();
-	//glTranslatef(0, 0, -4);
 	gluLookAt(0 + camX, 0 + camY, 8 + camZ, 0, 0, 0, 0, 1, 0);
 	drawAxes();
-	drawGrid(40);
+
+	//enableLighting();
 
 	//glRotatef(180, 0, 1, 0);
-	
+
 	glColor3f(0.45, 0.45, 0.45);
 	//Base Foundation
 	glPushMatrix();
@@ -216,8 +517,6 @@ void display() {
 	draw3DPanel(width, height, 2);
 	glPopMatrix();
 
-	drawLinesOnFeild(); //Not optimized
-
 	glColor3f(1, 1, 0);
 	drawWalls(width, height, 5, 1);
 
@@ -226,7 +525,6 @@ void display() {
 
 	glColor3f(1, 0, 1);
 	drawWalls(width + 40, 100, 14, 1);  // ( height / width ) * 160 = 100
-
 
 	//Front stage
 	glColor3f(1, 0, 0);
@@ -266,9 +564,33 @@ void display() {
 	draw2DStage(81.25, 100, 8, 14, 14.5);
 	glPopMatrix();
 
+	//Goal 1
+	glPushMatrix();
+	glColor3f(1, 1, 1);
+	glTranslatef(54, 2.7, 0);
+	glRotatef(-90, 0, 1, 0);
+	drawGoal(15, 0.2);
+	glPopMatrix();
+
+	//Goal 2
+	glPushMatrix();
+	glColor3f(1, 1, 1);
+	glTranslatef(-54, 2.7, 0);
+	glRotatef(180, 0, 1, 0);
+	glRotatef(-90, 0, 1, 0);
+	drawGoal(15, 0.2);
+	glPopMatrix();
+
+	//allSeats();
+
 	glPopMatrix();
 	glutSwapBuffers();
 }
+
+
+											/*  MAIN FUNCTIONS  */
+//////////////////////////////////////////////////////////////////////////////////////////////////////////
+/*______________________________________________________________________________________________________*/
 
 void init() {
 	glClearColor(0, 0, 0, 0);
