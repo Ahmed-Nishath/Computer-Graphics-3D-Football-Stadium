@@ -6,24 +6,28 @@
 GLfloat camY = 0.0;
 GLfloat camX = 0.0;
 GLfloat camZ = 0.0;
+GLfloat cam_speed = 2;
 
 //Display Score
 GLfloat r = 0.0;
-GLfloat keeper = 0.0;
 
+//Animation
+GLfloat hit = 60.0;
 GLfloat ballX = 0.0;
 GLfloat ballZ = 0.0;
+GLfloat keeper = 0.0;
 GLfloat ballRotation = 0.0;
-GLint hitBall = 0;
 
-GLint timeCount = 0;
+//Switches
+GLint tv = 0;
 GLint seat = 0;
+GLint hitBall = 0;
+GLint timeCount = 0;
 
 
-										/*  COMMON SHAPES  */
-//////////////////////////////////////////////////////////////////////////////////////////////////////////
 /*______________________________________________________________________________________________________*/
-
+/*------------------------------------------------------------------------------------------------------*/
+										/*  COMMON SHAPES  */
 
 void DrawCircle(float r) {
 	int i, triangles = 100;
@@ -56,7 +60,6 @@ void drawCylinder(GLfloat radius1, GLfloat radius2, GLfloat height) {
 }
 
 void customTorus(GLfloat multiply, GLfloat inner_radius, GLfloat outer_radius, GLint isFull) {
-
 	double s, t, x, y, z, degree;
 	int numc = 100, numt = 100;
 
@@ -77,15 +80,18 @@ void customTorus(GLfloat multiply, GLfloat inner_radius, GLfloat outer_radius, G
 		}
 		glEnd();
 	}
-
 }
 
-									/*  SCENE LIGHTING  */
-//////////////////////////////////////////////////////////////////////////////////////////////////////////
+void draw3DPanel(float w, float h, float t) {
+	glScalef(w, h, t);
+	glutSolidCube(1);
+}
+
 /*______________________________________________________________________________________________________*/
+/*------------------------------------------------------------------------------------------------------*/
+										/*  SCENE LIGHTING  */
 
 void Lighting() {
-
 	GLfloat light_diffuse[] = { 0.5, 0.5, 0.5, 1 };
 	GLfloat light_specular[] = { 0.5, 0.5, 0.5, 1 };
 
@@ -108,7 +114,7 @@ void Lighting() {
 	glLightfv(GL_LIGHT2, GL_POSITION, light_position_right);
 
 	//Score Board Light Left
-	if (r == 1) glEnable(GL_LIGHT4);
+	if (r == 1 && tv == 1) glEnable(GL_LIGHT4);
 	else glDisable(GL_LIGHT4);
 
 	GLfloat light_diffuse_red[] = { 0.2, 0, 0, 1 };
@@ -118,441 +124,24 @@ void Lighting() {
 	glLightfv(GL_LIGHT4, GL_DIFFUSE, light_diffuse_red);
 	glLightfv(GL_LIGHT4, GL_SPECULAR, light_specular_red);
 	glLightfv(GL_LIGHT4, GL_POSITION, light_position_score_board);
-
 }
 
-											/*  GROUND WALLS  */
-//////////////////////////////////////////////////////////////////////////////////////////////////////////
 /*______________________________________________________________________________________________________*/
+/*------------------------------------------------------------------------------------------------------*/
+											/*  FOUNDATION  */
 
-void draw3DPanel(float w, float h, float t) {
-	glScalef(w, h, t);
-	glutSolidCube(1);
-}
-
-void drawWalls(float fb_w, float lr_w, float h, float t) {
+void drawFoundation() {
+	glColor3f(0.8, 0.8, 0.8);
 	glPushMatrix();
-
-	//Wall left
-	glPushMatrix();
-	glTranslatef(-fb_w / 2, h / 2, 0);
-	glRotatef(90, 0, 1, 0);
-	draw3DPanel(lr_w, h, t);
-	glPopMatrix();
-
-	//Wall right
-	glPushMatrix();
-	glTranslatef(fb_w / 2, h / 2, 0);
-	glRotatef(90, 0, 1, 0);
-	draw3DPanel(lr_w, h, t);
-	glPopMatrix();
-
-	//Wall front
-	glPushMatrix();
-	glTranslatef(0, h / 2, lr_w / 2 - t / 2);
-	draw3DPanel(fb_w, h, t);
-	glPopMatrix();
-
-	//Wall back
-	glPushMatrix();
-	glTranslatef(0, h / 2, -lr_w / 2 + t / 2);
-	draw3DPanel(fb_w, h, t);
-	glPopMatrix();
-
-	glPopMatrix();
-}
-
-											/*  STAGE  */
-//////////////////////////////////////////////////////////////////////////////////////////////////////////
-/*______________________________________________________________________________________________________*/
-
-void draw2DStage(float w, float h, float d) {
-
-	glBegin(GL_QUADS);
-	glVertex3f(-w / 2, 0, 0);
-	glVertex3f( w / 2, 0, 0);
-	glVertex3f( w / 2, h, 0);
-	glVertex3f(-w / 2, h, 0);
-
-	glVertex3f(-w / 2, 0, 0);
-	glVertex3f( w / 2, 0, 0);
-	glVertex3f( w / 2 + d, 0, d);
-	glVertex3f(-w / 2 - d, 0, d);
-
-	glVertex3f(-w / 2 - d, 0, d);
-	glVertex3f( w / 2 + d, 0, d);
-	glVertex3f( w / 2 + d, h + d, d);
-	glVertex3f(-w / 2 - d, h + d, d);
-
-	glVertex3f(-w / 2 - d, h + d, d);
-	glVertex3f( w / 2 + d, h + d, d);
-	glVertex3f( w / 2, h, 0);
-	glVertex3f(-w / 2, h, 0);
-
-	glEnd();
-
-}
-
-void allStage() {
-	glColor3f(0.9, 0.9, 0.85);
-	glPushMatrix();
-
-	//Front stage
-	glPushMatrix();
-	glTranslatef(0, 0, 41);
-	draw2DStage(130, 8, 10);
-	glPopMatrix();
-
-	//Back stage
-	glPushMatrix();
-	glTranslatef(0, 0, -41);
-	glRotatef(-180, 0, 1, 0);
-	draw2DStage(130, 8, 10);
-	glPopMatrix();
-
-	//Left stage
-	glPushMatrix();
-	glTranslatef(-65, 0, 0);
-	glRotatef(-90, 0, 1, 0);
-	draw2DStage(82, 8, 10);
-	glPopMatrix();
-
-	//Right stage
-	glPushMatrix();
-	glTranslatef(65, 0, 0);
-	glRotatef(90, 0, 1, 0);
-	draw2DStage(82, 8, 10);
-	glPopMatrix();
-
-	glPopMatrix();
-}
-
-											/*  SEATS  */
-//////////////////////////////////////////////////////////////////////////////////////////////////////////
-/*______________________________________________________________________________________________________*/
-
-void drawChairComponent() {
-	glPushMatrix();
-	glTranslatef(0, 2, 0.5);
-	glScalef(8, 4, 1);
+	glScalef(250, 1, 180);
 	glutSolidCube(1);
 	glPopMatrix();
-
-	glPushMatrix();
-	glTranslatef(0, 4, -0.01);
-	drawCylinder(4, 1);
-	glPopMatrix();
 }
 
-void drawChair() {
-	glColor3f(1, 1, 1);
-	//Chair Back Rester
-	glPushMatrix();
-	glTranslatef(0, 1, 0);
-	drawChairComponent();
-	glPopMatrix();
 
-	glColor3f(1, 1, 1);
-	//Chair Seat
-	glPushMatrix();
-	glTranslatef(0, 1, 0);
-	glRotatef(90, 1, 0, 0);
-	drawChairComponent();
-	glPopMatrix();
-}
-
-void drawSeatRow(int row_length) {
-	glColor3f(1, 0, 0);
-	glPushMatrix();
-	glScalef(row_length, 1, 2);
-	glutSolidCube(1);
-	glPopMatrix();
-
-	for (int i = -(row_length / 2) + 1; i <= (row_length / 2) - 1; i += 2) {
-		glPushMatrix();
-		glTranslatef(i, 0.5, -0.70);
-		glScalef(0.2, 0.2, 0.2);
-		drawChair();
-		glPopMatrix();
-	}
-}
-
-void allSeats() {
-
-	//Left Seat Set
-	glPushMatrix();
-	glTranslatef(0, 9, 42);
-
-		glPushMatrix();
-		glRotatef(180, 0, 1, 0);
-		drawSeatRow(130);
-		glPopMatrix();
-
-		glTranslatef(0, 3, 3);
-		glPushMatrix();
-		glRotatef(180, 0, 1, 0);
-		drawSeatRow(138);
-		glPopMatrix();
-
-		glTranslatef(0, 3, 3);
-		glPushMatrix();
-		glRotatef(180, 0, 1, 0);
-		drawSeatRow(145);
-		glPopMatrix();
-
-	glPopMatrix();
-
-
-	//Right Seat Set
-	glPushMatrix();
-
-	glTranslatef(0, 9, -42);
-
-		glPushMatrix();
-		drawSeatRow(130);
-		glPopMatrix();
-
-		glTranslatef(0, 3, -3);
-		glPushMatrix();
-		drawSeatRow(138);
-		glPopMatrix();
-
-		glTranslatef(0, 3, -3);
-		glPushMatrix();
-		drawSeatRow(145);
-		glPopMatrix();
-
-	glPopMatrix();
-
-
-	//Front Seat Set
-	glPushMatrix();
-
-	glTranslatef(-68.5, 11.8, 0);
-	glRotatef(180, 0, 1, 0);
-
-		glPushMatrix();
-		glRotatef(-90, 0, 1, 0);
-		drawSeatRow(90);
-		glPopMatrix();
-
-		glTranslatef(3, 3, 0);
-		glPushMatrix();
-		glRotatef(-90, 0, 1, 0);
-		drawSeatRow(94);
-		glPopMatrix();
-
-		glTranslatef(-6, -6, 0);
-		glPushMatrix();
-		glRotatef(-90, 0, 1, 0);
-		drawSeatRow(84);
-		glPopMatrix();
-
-	glPopMatrix();
-
-
-	//Back Seat Set
-	glPushMatrix();
-
-	glTranslatef(68.5, 11.8, 0);
-
-		glPushMatrix();
-		glRotatef(-90, 0, 1, 0);
-		drawSeatRow(90);
-		glPopMatrix();
-
-		glTranslatef(3, 3, 0);
-		glPushMatrix();
-		glRotatef(-90, 0, 1, 0);
-		drawSeatRow(94);
-		glPopMatrix();
-
-		glTranslatef(-6, -6, 0);
-		glPushMatrix();
-		glRotatef(-90, 0, 1, 0);
-		drawSeatRow(84);
-		glPopMatrix();
-
-	glPopMatrix();
-
-}
-
-											/*  GOAL POST  */
-//////////////////////////////////////////////////////////////////////////////////////////////////////////
 /*______________________________________________________________________________________________________*/
-
-
-void drawMesh(float width, float height, float spread) {
-
-	if (height > width) {
-		glRotatef(90, 0, 0, 1);
-		float temp = height;
-		height = width;
-		width = temp;
-	}
-
-	glPushMatrix();
-	glTranslatef(-width / 2, height / 2, 0);
-	float j = 0;
-	for (float i = 0; i < width; i += spread) {
-		glBegin(GL_LINES);
-		glVertex3f(i, 0, 0);
-		if (i >= height) {
-			glVertex3f(j, -height, 0);
-			j += spread;
-		}
-		else glVertex3f(0, -i, 0);
-		glEnd();
-	}
-
-	for (float i = 0; i < height; i += spread) {
-		glBegin(GL_LINES);
-		glVertex3f(width, -i, 0);
-		glVertex3f(j, -height, 0);
-		glEnd();
-		j += spread;
-	}
-	glPopMatrix();
-
-	glPushMatrix();
-	glRotatef(180, 0, 1, 0);
-	glTranslatef(-width / 2, height / 2, 0);
-	j = 0;
-	for (float i = 0; i < width; i += spread) {
-		glBegin(GL_LINES);
-		glVertex3f(i, 0, 0);
-		if (i >= height) {
-			glVertex3f(j, -height, 0);
-			j += spread;
-		}
-		else glVertex3f(0, -i, 0);
-		glEnd();
-	}
-
-	for (float i = 0; i < height; i += spread) {
-		glBegin(GL_LINES);
-		glVertex3f(width, -i, 0);
-		glVertex3f(j, -height, 0);
-		glEnd();
-		j += spread;
-	}
-	glPopMatrix();
-}
-
-void drawGoalPostBar(float width, float height, float thick) {
-
-	//Three Polls
-	glPushMatrix();
-	glTranslatef(-width / 2, 0, 0);
-	glScalef(1, (1 / thick) * height, 1);
-	glRotatef(-90, 1, 0, 0);
-	drawCylinder(thick, thick);
-	glPopMatrix();
-
-	glPushMatrix();
-	glTranslatef(width / 2, 0, 0);
-	glScalef(1, (1 / thick) * height, 1);
-	glRotatef(-90, 1, 0, 0);
-	drawCylinder(thick, thick);
-	glPopMatrix();
-
-	glPushMatrix();
-	glTranslatef(width / 2, height, 0);
-	glScalef((1 / thick) * width, 1, 1);
-	glRotatef(-90, 0, 1, 0);
-	drawCylinder(thick, thick);
-	glPopMatrix();
-
-	//Sphear for Sharp edges
-	glPushMatrix();
-	glTranslatef(width / 2, height, 0);
-	glutSolidSphere(thick, 100, 100);
-
-	glTranslatef(-width, 0, 0);
-	glutSolidSphere(thick, 100, 100);
-	glPopMatrix();
-}
-
-void drawGoal(float width, float thick) {
-
-	float height = width / 3, distance = width * 0.3;
-
-	//Front U bar
-	drawGoalPostBar(width, height, thick);
-
-	//Left Connector
-	glPushMatrix();
-	glTranslatef(-width / 2, height, 0);
-	glScalef(1, 1, (1 / thick) * distance);
-	glRotatef(-180, 1, 0, 0);
-	drawCylinder(thick, thick);
-	glPopMatrix();
-
-	//Right Connector
-	glPushMatrix();
-	glTranslatef(width / 2, height, 0);
-	glScalef(1, 1, (1 / thick) * distance);
-	glRotatef(-180, 1, 0, 0);
-	drawCylinder(thick, thick);
-	glPopMatrix();
-
-	//Back U bar
-	glPushMatrix();
-	glTranslatef(0, 0, -distance);
-	drawGoalPostBar(width, height, thick);
-	glPopMatrix();
-
-	glColor3f(0.95, 0.95, 1);
-	float spread = 0.5;
-	glLineWidth(2);
-	//Mesh Back
-	glPushMatrix();
-	glTranslatef(0, height / 2, -distance);
-	drawMesh(width, height, spread);
-	glPopMatrix();
-
-	//Mesh Left
-	glPushMatrix();
-	glTranslatef(-width / 2, height / 2, -distance / 2);
-	glRotatef(90, 0, 1, 0);
-	drawMesh(distance, height, spread);
-	glPopMatrix();
-
-	//Mesh Right
-	glPushMatrix();
-	glTranslatef(width / 2, height / 2, -distance / 2);
-	glRotatef(90, 0, 1, 0);
-	drawMesh(distance, height, spread);
-	glPopMatrix();
-
-	//Mesh Top
-	glPushMatrix();
-	glTranslatef(0, height, -distance / 2);
-	glRotatef(90, 1, 0, 0);
-	drawMesh(width, distance, spread);
-	glPopMatrix();
-}
-
-void allGoals() {
-
-	//Goal 1
-	glPushMatrix();
-	glColor3f(1, 1, 1);
-	glTranslatef(54, 2.7, 0);
-	glRotatef(-90, 0, 1, 0);
-	drawGoal(15, 0.2);
-	glPopMatrix();
-
-	//Goal 2
-	glPushMatrix();
-	glColor3f(1, 1, 1);
-	glTranslatef(-54, 2.7, 0);
-	glRotatef(180, 0, 1, 0);
-	glRotatef(-90, 0, 1, 0);
-	drawGoal(15, 0.2);
-	glPopMatrix();
-
-}
+/*------------------------------------------------------------------------------------------------------*/
+											/*  FEILD  */
 
 void drawFeild(GLfloat width, GLfloat height) {
 	glColor3f(0, 0.9, 0);
@@ -582,9 +171,10 @@ void drawFeild(GLfloat width, GLfloat height) {
 	glPopMatrix();
 }
 
-											/*  FEILD LINES  */
-//////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 /*______________________________________________________________________________________________________*/
+/*------------------------------------------------------------------------------------------------------*/
+										/*  FEILD LINES  */
 
 void drawBox() {
 	//Main Line
@@ -611,16 +201,8 @@ void drawBox() {
 }
 
 void drawFeildLines() {
-
 	glColor3f(1, 1, 1);
 	glPushMatrix();
-
-	//Central Circle
-	glPushMatrix();
-	glTranslatef(0, 3, 0);
-	glRotatef(90, 1, 0, 0);
-	customTorus(2, 0.5, 7, 1);
-	glPopMatrix();
 
 	//Mid Line
 	glPushMatrix();
@@ -634,7 +216,7 @@ void drawFeildLines() {
 	glPushMatrix();
 	glTranslatef(-6, 0, 0);
 	drawBox();
-	glPopMatrix();	
+	glPopMatrix();
 
 	//Right Goal Outer Line
 	glPushMatrix();
@@ -644,8 +226,15 @@ void drawFeildLines() {
 	glPopMatrix();
 
 	////////////////////////////////////////
-	if(glIsEnabled(GL_LIGHT0)) glDisable(GL_LIGHTING);
-	 
+	if (glIsEnabled(GL_LIGHT0)) glDisable(GL_LIGHTING);
+
+	//Central Circle
+	glPushMatrix();
+	glTranslatef(0, 3.05, 0);
+	glRotatef(90, 1, 0, 0);
+	customTorus(2, 0.5, 7, 1);
+	glPopMatrix();
+
 	//Right Goal Outer Arc
 	glPushMatrix();
 	glTranslatef(34, 3.05, 0);
@@ -739,9 +328,113 @@ void drawFeildLines() {
 	glPopMatrix();
 }
 
-											/*  FLAGS  */
-//////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 /*______________________________________________________________________________________________________*/
+/*------------------------------------------------------------------------------------------------------*/
+											/*  GROUND WALLS  */
+
+void drawWalls(float fb_w, float lr_w, float h, float t, GLfloat r, GLfloat g, GLfloat b) {
+	glColor3f(r, g, b);
+
+	glPushMatrix();
+
+	//Wall left
+	glPushMatrix();
+	glTranslatef(-fb_w / 2, h / 2, 0);
+	glRotatef(90, 0, 1, 0);
+	draw3DPanel(lr_w, h, t);
+	glPopMatrix();
+
+	//Wall right
+	glPushMatrix();
+	glTranslatef(fb_w / 2, h / 2, 0);
+	glRotatef(90, 0, 1, 0);
+	draw3DPanel(lr_w, h, t);
+	glPopMatrix();
+
+	//Wall front
+	glPushMatrix();
+	glTranslatef(0, h / 2, lr_w / 2 - t / 2);
+	draw3DPanel(fb_w, h, t);
+	glPopMatrix();
+
+	//Wall back
+	glPushMatrix();
+	glTranslatef(0, h / 2, -lr_w / 2 + t / 2);
+	draw3DPanel(fb_w, h, t);
+	glPopMatrix();
+
+	glPopMatrix();
+}
+
+
+/*______________________________________________________________________________________________________*/
+/*------------------------------------------------------------------------------------------------------*/
+											/*  STAGE  */
+
+void draw2DStage(float w, float h, float d) {
+	glBegin(GL_QUADS);
+	glVertex3f(-w / 2, 0, 0);
+	glVertex3f(w / 2, 0, 0);
+	glVertex3f(w / 2, h, 0);
+	glVertex3f(-w / 2, h, 0);
+
+	glVertex3f(-w / 2, 0, 0);
+	glVertex3f(w / 2, 0, 0);
+	glVertex3f(w / 2 + d, 0, d);
+	glVertex3f(-w / 2 - d, 0, d);
+
+	glVertex3f(-w / 2 - d, 0, d);
+	glVertex3f(w / 2 + d, 0, d);
+	glVertex3f(w / 2 + d, h + d, d);
+	glVertex3f(-w / 2 - d, h + d, d);
+
+	glVertex3f(-w / 2 - d, h + d, d);
+	glVertex3f(w / 2 + d, h + d, d);
+	glVertex3f(w / 2, h, 0);
+	glVertex3f(-w / 2, h, 0);
+
+	glEnd();
+}
+
+void allStage() {
+	glColor3f(0.9, 0.9, 0.85);
+	glPushMatrix();
+
+	//Front stage
+	glPushMatrix();
+	glTranslatef(0, 0, 41);
+	draw2DStage(130, 8, 10);
+	glPopMatrix();
+
+	//Back stage
+	glPushMatrix();
+	glTranslatef(0, 0, -41);
+	glRotatef(-180, 0, 1, 0);
+	draw2DStage(130, 8, 10);
+	glPopMatrix();
+
+	//Left stage
+	glPushMatrix();
+	glTranslatef(-65, 0, 0);
+	glRotatef(-90, 0, 1, 0);
+	draw2DStage(82, 8, 10);
+	glPopMatrix();
+
+	//Right stage
+	glPushMatrix();
+	glTranslatef(65, 0, 0);
+	glRotatef(90, 0, 1, 0);
+	draw2DStage(82, 8, 10);
+	glPopMatrix();
+
+	glPopMatrix();
+}
+
+
+/*______________________________________________________________________________________________________*/
+/*------------------------------------------------------------------------------------------------------*/
+											/*  FLAGS  */
 
 void drawFlags() {
 	glColor3f(1, 1, 1);
@@ -796,18 +489,19 @@ void allFlags() {
 	glPopMatrix();
 }
 
-											/*  OUTER WALLS  */
-//////////////////////////////////////////////////////////////////////////////////////////////////////////
-/*______________________________________________________________________________________________________*/
 
-void drawRoofPanel(GLfloat w, GLfloat h, GLfloat t, GLfloat translate) {
+/*______________________________________________________________________________________________________*/
+/*------------------------------------------------------------------------------------------------------*/
+											/*  OUTER WALLS  */
+
+void drawRoofPanel(GLfloat w, GLfloat h, GLfloat t, GLfloat translate, GLfloat color[]) {
 	glPushMatrix();
 	glScalef(w, h, t);
 	glutSolidCube(1);
 	glPopMatrix();
 
 	glColor3f(1, 1, 1);
-	for (int i = -w / 2 + 1 ; i < w / 2; i += 4) {
+	for (int i = -w / 2 + 1; i < w / 2; i += 4) {
 		glPushMatrix();
 		glTranslatef(i * 1, 0, translate);
 		glScalef(2, h - 0.5, t);
@@ -815,18 +509,16 @@ void drawRoofPanel(GLfloat w, GLfloat h, GLfloat t, GLfloat translate) {
 		glPopMatrix();
 
 	}
-
-	glColor3f(0.5, 0.75, 1);
+	glColor3fv(color);
 }
 
-void drawWallMainPanel(GLfloat w, GLfloat h, GLfloat t, GLfloat translate) {
+void drawWallMainPanel(GLfloat w, GLfloat h, GLfloat t, GLfloat translate, GLfloat color[]) {
 	glPushMatrix();
 	glScalef(w, h, t);
 	glutSolidCube(1);
 	glPopMatrix();
 
-	//IF TOO SLOW DISABLE BELOW
-	glColor3f(0.125, 0.25, 0.5);
+	glColor3f(0.125, 0.25, 0.4);
 	for (int i = -w / 2 + 1; i < w / 2; i += 4) {
 		glPushMatrix();
 		glTranslatef(i * 1, 0, translate);
@@ -834,33 +526,34 @@ void drawWallMainPanel(GLfloat w, GLfloat h, GLfloat t, GLfloat translate) {
 		glutSolidCube(1);
 		glPopMatrix();
 	}
-
-	glColor3f(0.5, 0.75, 1);
+	glColor3fv(color);
 }
 
 void drawSurroundingWalls(GLfloat height) {
-	glColor3f(0.5, 0.75, 1);
+	GLfloat color[] = { 0.15, 0.35, 0.5 };
+	glColor3fv(color);
+
 	glPushMatrix();
 
 	//Sides 1
 	glPushMatrix();
 	glTranslatef(0, height / 2, 53);
-	drawWallMainPanel(153, height, 4, 0.8);
+	drawWallMainPanel(153, height, 4, 0.8, color);
 	glPopMatrix();
 
 	//Side 2
 	glPushMatrix();
 	glTranslatef(0, height / 2, -53);
-	drawWallMainPanel(153, height, 4, -0.8);
+	drawWallMainPanel(153, height, 4, -0.8, color);
 	glPopMatrix();
 
-	
+	///////////////
 	//Angled Left 1
 	glPushMatrix();
 	glTranslatef(75.4, height / 2, 53.8);
 	glRotatef(60, 0, 1, 0);
 	glTranslatef(63.1 / 2, 0, -0.5);
-	drawWallMainPanel(63.1, height, 4, 0.8);
+	drawWallMainPanel(63.1, height, 4, 0.8, color);
 	glPopMatrix();
 
 	//Angled Left 2
@@ -868,7 +561,7 @@ void drawSurroundingWalls(GLfloat height) {
 	glTranslatef(75.4, height / 2, -53.8);
 	glRotatef(-60, 0, 1, 0);
 	glTranslatef(63.1 / 2, 0, 0.5);
-	drawWallMainPanel(63.1, height, 4, -0.8);
+	drawWallMainPanel(63.1, height, 4, -0.8, color);
 	glPopMatrix();
 
 	//Angled Right 1
@@ -876,7 +569,7 @@ void drawSurroundingWalls(GLfloat height) {
 	glTranslatef(-74.6, height / 2, 53.5);
 	glRotatef(120, 0, 1, 0);
 	glTranslatef(63.1 / 2, 0, -0.5);
-	drawWallMainPanel(63.1, height, 4, -0.8);
+	drawWallMainPanel(63.1, height, 4, -0.8, color);
 	glPopMatrix();
 
 	//Angled Right 2
@@ -884,30 +577,33 @@ void drawSurroundingWalls(GLfloat height) {
 	glTranslatef(-74.6, height / 2, -53.5);
 	glRotatef(-120, 0, 1, 0);
 	glTranslatef(63.1 / 2, 0, 0.5);
-	drawWallMainPanel(63.1, height, 4, 0.8);
+	drawWallMainPanel(63.1, height, 4, 0.8, color);
 	glPopMatrix();
 
+	//Roof
+	///////////////
+	glColor3fv(color);
 
 	glPushMatrix();
 	glTranslatef(0, -0.1, 0);
 
 	//UP 1
 	glPushMatrix();
-	glTranslatef(0, height - 1.998, 53 - 12.5);
+	glTranslatef(0, height - 1.999, 53 - 12.5);
 	glRotatef(-90, 1, 0, 0);
-	drawRoofPanel(153, 25, 4, -1);
+	drawRoofPanel(153, 25, 4, -1, color);
 	glPopMatrix();
 
 	//UP 2
 	glPushMatrix();
-	glTranslatef(0, height - 1.998, -53 + 12.5);
+	glTranslatef(0, height - 1.996, -53 + 12.5);
 	glRotatef(-90, 1, 0, 0);
-	drawRoofPanel(153, 25, 4, -1);
+	drawRoofPanel(153, 25, 4, -1, color);
 	glPopMatrix();
 
 	//Angled Left 1 Up
 	glPushMatrix();
-	glTranslatef(80.4, height - 1.985, 20.9);
+	glTranslatef(80.4, height - 1.998, 20.9);
 	glRotatef(60, 0, 1, 0);
 	glRotatef(-90, 1, 0, 0);
 	glScalef(63.1, 25, 4);
@@ -916,7 +612,7 @@ void drawSurroundingWalls(GLfloat height) {
 
 	//Angled Left 2 Up
 	glPushMatrix();
-	glTranslatef(80.4, height - 1.999, -20.9);
+	glTranslatef(80.4, height - 1.997, -20.9);
 	glRotatef(-60, 0, 1, 0);
 	glRotatef(-90, 1, 0, 0);
 	glScalef(63.1, 25, 4);
@@ -925,7 +621,7 @@ void drawSurroundingWalls(GLfloat height) {
 
 	//Angled Right 1 Up
 	glPushMatrix();
-	glTranslatef(-80.4, height - 1.999, 20.9);
+	glTranslatef(-80.4, height - 1.994, 20.9);
 	glRotatef(-60, 0, 1, 0);
 	glRotatef(-90, 1, 0, 0);
 	glScalef(63.1, 25, 4);
@@ -934,7 +630,7 @@ void drawSurroundingWalls(GLfloat height) {
 
 	//Angled Right 2 Up
 	glPushMatrix();
-	glTranslatef(-80.4, height - 1.985, -20.9);
+	glTranslatef(-80.4, height - 1.995, -20.9);
 	glRotatef(60, 0, 1, 0);
 	glRotatef(-90, 1, 0, 0);
 	glScalef(63.1, 25, 4);
@@ -945,7 +641,7 @@ void drawSurroundingWalls(GLfloat height) {
 
 	//Covers on sides
 	glPushMatrix();
-	glTranslatef(80 ,19.5 ,0);
+	glTranslatef(80, 19.5, 0);
 	glRotatef(-90, 0, 1, 0);
 	glScalef(90, 39, 2);
 	glutSolidCube(1);
@@ -961,12 +657,12 @@ void drawSurroundingWalls(GLfloat height) {
 	glPopMatrix();
 }
 
-											/*  LIGHT PANELS  */
-//////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 /*______________________________________________________________________________________________________*/
+/*------------------------------------------------------------------------------------------------------*/
+											/*  LIGHT PANELS  */
 
-void LightSource( GLfloat light_on_off[]) {
-
+void LightSource(GLfloat light_on_off[]) {
 	glColor3f(0, 0, 0);
 
 	//Light Bar
@@ -1011,15 +707,13 @@ void LightSource( GLfloat light_on_off[]) {
 			glPopMatrix();
 		}
 	}
-
 	glDisable(GL_LIGHT3);
-
 }
 
 void allPanels() {
-	GLfloat black[] = {0 ,0, 0};
-	GLfloat white[] = {1, 1, 1};
-	
+	GLfloat black[] = { 0 ,0, 0 };
+	GLfloat white[] = { 1, 1, 1 };
+
 	//Light Panel Left
 	glPushMatrix();
 	glTranslatef(75, 27, 0);
@@ -1041,12 +735,12 @@ void allPanels() {
 	else  LightSource(black);
 
 	glPopMatrix();
-	
 }
 
-											/*  SCORE BOARD  */
-//////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 /*______________________________________________________________________________________________________*/
+/*------------------------------------------------------------------------------------------------------*/
+											/*  SCORE BOARD  */
 
 void ScoreBoard() {
 	glColor3f(0, 0, 0);
@@ -1068,6 +762,19 @@ void ScoreBoard() {
 		0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 	};
 
+	GLfloat score_update[] = {
+		0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+		0,r,r,r,r,r,0,0,0,0,0,0,0,0,0,r,r,r,0,0,0,
+		0,0,0,0,0,r,0,0,0,0,0,0,0,0,0,r,0,r,0,0,0,
+		0,0,0,0,0,r,0,0,0,0,0,0,0,0,0,0,0,r,0,0,0,
+		0,r,r,r,r,r,0,0,0,r,r,r,0,0,0,0,0,r,0,0,0,
+		0,r,0,0,0,0,0,0,0,r,r,r,0,0,0,0,0,r,0,0,0,
+		0,r,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,r,0,0,0,
+		0,r,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,r,0,0,0,
+		0,r,r,r,r,r,0,0,0,0,0,0,0,0,0,r,r,r,r,r,0,
+		0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+	};
+
 	int count = 0;
 
 	glPushMatrix();
@@ -1076,7 +783,12 @@ void ScoreBoard() {
 	for (int i = 0; i < 10; i++) {
 		for (int j = 0; j < 21; j++) {
 
-			glColor3f(score[count], 0, 0);
+			if (tv == 1) {
+				if (ballX < 180) glColor3f(score[count], 0, 0);
+				else glColor3f(score_update[count], 0, 0);
+			}
+			else 
+				glColor3f(0, 0, 0);
 
 			glPushMatrix();
 			glTranslatef(i + 0.05 * i, j + 0.05 * j, 0.02);
@@ -1105,12 +817,12 @@ void allScoreBoard() {
 	glPopMatrix();
 }
 
-											/*  PLAYER  */
-//////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 /*______________________________________________________________________________________________________*/
+/*------------------------------------------------------------------------------------------------------*/
+											/*  PLAYER  */
 
 void drawHeadandNeck() {
-
 	//head
 	glPushMatrix();
 	glTranslatef(0, 4, 0);
@@ -1123,7 +835,6 @@ void drawHeadandNeck() {
 	glRotatef(-90, 1, 0, 0);
 	drawCylinder(1, 1, 2.5);
 	glPopMatrix();
-
 }
 
 void drawLeg() {
@@ -1150,7 +861,6 @@ void drawLeg() {
 	glPopMatrix();
 }
 
-
 void drawHand(GLfloat color[]) {
 	glColor3fv(color);
 
@@ -1160,7 +870,7 @@ void drawHand(GLfloat color[]) {
 	glRotatef(90, 1, 0, 0);
 	glScalef(1.02, 1.02, 1.02);
 	glScalef(1, 0.7, 0.7);
-	glutSolidSphere(0.7, 50, 50);
+	glutSolidSphere(1, 50, 50);
 	glPopMatrix();
 
 	glPushMatrix();
@@ -1168,7 +878,7 @@ void drawHand(GLfloat color[]) {
 	glRotatef(90, 1, 0, 0);
 	glScalef(1.02, 1.02, 1.02);
 	glScalef(1, 0.7, 0.7);
-	drawCylinder(0.7, 0.65, 2.5);
+	drawCylinder(1, 0.95, 2.5);
 	glPopMatrix();
 
 	glColor3f(0.90980, 0.74509, 0.674509);
@@ -1176,14 +886,14 @@ void drawHand(GLfloat color[]) {
 	glTranslatef(-1.2, 5.1, 0);
 	glRotatef(90, 1, 0, 0);
 	glScalef(1, 0.7, 0.7);
-	drawCylinder(0.7, 0.3, 11.5);
+	drawCylinder(1, 0.7, 11.5);
 	glPopMatrix();
 
 	glPushMatrix();
 	glTranslatef(-1.2, -3, 0);
 	glRotatef(90, 1, 0, 0);
-	glScalef(0.5, 0.2, 1.35);
-	glutSolidSphere(0.8, 50, 50);
+	glScalef(0.5, 0.3, 1.35);
+	glutSolidSphere(1.1, 50, 50);
 	glPopMatrix();
 }
 
@@ -1232,9 +942,7 @@ void drawLap() {
 	glPopMatrix();
 }
 
-
-void drawLowerBody(GLfloat color[]) {
-
+void drawLowerBody(GLfloat color[], GLboolean isForward) {
 	glColor3fv(color);
 	//Lower Body Left
 	glPushMatrix();
@@ -1254,6 +962,13 @@ void drawLowerBody(GLfloat color[]) {
 
 	//Leg Left
 	glPushMatrix();
+	
+	if (isForward) {
+		glTranslatef(-1.2, -2.5, 0);
+		glRotatef(hit, 1, 0, 0);
+		glTranslatef(1.2, 2.5, 0);
+	}
+
 	drawLeg();
 	glPopMatrix();
 
@@ -1262,11 +977,9 @@ void drawLowerBody(GLfloat color[]) {
 	glTranslatef(2.5, 0, 0);
 	drawLeg();
 	glPopMatrix();
-
 }
 
-
-void drawPlayer(GLfloat shirt_color[], GLfloat trouser_color[], GLfloat hand_front, GLfloat hand_side) {
+void drawPlayer(GLfloat shirt_color[], GLfloat trouser_color[], GLfloat hand_front, GLfloat hand_side, GLboolean isForward) {
 	glColor3f(0.90980, 0.74509, 0.674509);
 	glPushMatrix();
 	glTranslatef(0, 5.3, 0);
@@ -1288,7 +1001,7 @@ void drawPlayer(GLfloat shirt_color[], GLfloat trouser_color[], GLfloat hand_fro
 
 	//Lower Body
 	glPushMatrix();
-	drawLowerBody(trouser_color);
+	drawLowerBody(trouser_color, isForward);
 	glPopMatrix();
 
 	glPopMatrix();
@@ -1304,7 +1017,7 @@ void allPlayers() {
 	glPushMatrix();
 	glTranslatef(42, 0, 0);
 	glRotatef(90, 0, 1, 0);
-	drawPlayer(red, white, -45, 15);
+	drawPlayer(red, white, -45, 15, true);
 	glPopMatrix();
 
 	//Goal Keeper
@@ -1312,20 +1025,194 @@ void allPlayers() {
 	glTranslatef(0, 0, keeper);
 	glTranslatef(53, 0, -5);
 	glRotatef(-90, 0, 1, 0);
-	drawPlayer(red, white, -45, 15);
+	drawPlayer(red, white, -45, 15, false);
 	glPopMatrix();
 
 	//Refree
 	glPushMatrix();
 	glTranslatef(47, 0, 15);
 	glRotatef(200, 0, 1, 0);
-	drawPlayer(yellow, black, -90, 0);
+	drawPlayer(yellow, black, -90, 0, false);
 	glPopMatrix();
 }
 
-											/* FOOT  BALL */
-//////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 /*______________________________________________________________________________________________________*/
+/*------------------------------------------------------------------------------------------------------*/
+											/*  GOAL POST  */
+
+void drawMesh(float width, float height, float spread) {
+
+	if (height > width) {
+		glRotatef(90, 0, 0, 1);
+		float temp = height;
+		height = width;
+		width = temp;
+	}
+
+	glPushMatrix();
+	glTranslatef(-width / 2, height / 2, 0);
+	float j = 0;
+	for (float i = 0; i < width; i += spread) {
+		glBegin(GL_LINES);
+		glVertex3f(i, 0, 0);
+		if (i >= height) {
+			glVertex3f(j, -height, 0);
+			j += spread;
+		}
+		else glVertex3f(0, -i, 0);
+		glEnd();
+	}
+
+	for (float i = 0; i < height; i += spread) {
+		glBegin(GL_LINES);
+		glVertex3f(width, -i, 0);
+		glVertex3f(j, -height, 0);
+		glEnd();
+		j += spread;
+	}
+	glPopMatrix();
+
+	glPushMatrix();
+	glRotatef(180, 0, 1, 0);
+	glTranslatef(-width / 2, height / 2, 0);
+	j = 0;
+	for (float i = 0; i < width; i += spread) {
+		glBegin(GL_LINES);
+		glVertex3f(i, 0, 0);
+		if (i >= height) {
+			glVertex3f(j, -height, 0);
+			j += spread;
+		}
+		else glVertex3f(0, -i, 0);
+		glEnd();
+	}
+
+	for (float i = 0; i < height; i += spread) {
+		glBegin(GL_LINES);
+		glVertex3f(width, -i, 0);
+		glVertex3f(j, -height, 0);
+		glEnd();
+		j += spread;
+	}
+	glPopMatrix();
+}
+
+void drawGoalPostBar(float width, float height, float thick) {
+	//Three Polls
+	glPushMatrix();
+	glTranslatef(-width / 2, 0, 0);
+	glScalef(1, (1 / thick) * height, 1);
+	glRotatef(-90, 1, 0, 0);
+	drawCylinder(thick, thick);
+	glPopMatrix();
+
+	glPushMatrix();
+	glTranslatef(width / 2, 0, 0);
+	glScalef(1, (1 / thick) * height, 1);
+	glRotatef(-90, 1, 0, 0);
+	drawCylinder(thick, thick);
+	glPopMatrix();
+
+	glPushMatrix();
+	glTranslatef(width / 2, height, 0);
+	glScalef((1 / thick) * width, 1, 1);
+	glRotatef(-90, 0, 1, 0);
+	drawCylinder(thick, thick);
+	glPopMatrix();
+
+	//Sphear for Sharp edges
+	glPushMatrix();
+	glTranslatef(width / 2, height, 0);
+	glutSolidSphere(thick, 100, 100);
+
+	glTranslatef(-width, 0, 0);
+	glutSolidSphere(thick, 100, 100);
+	glPopMatrix();
+}
+
+void drawGoal(float width, float thick) {
+	float height = width / 3, distance = width * 0.3;
+
+	//Front U bar
+	drawGoalPostBar(width, height, thick);
+
+	//Left Connector
+	glPushMatrix();
+	glTranslatef(-width / 2, height, 0);
+	glScalef(1, 1, (1 / thick) * distance);
+	glRotatef(-180, 1, 0, 0);
+	drawCylinder(thick, thick);
+	glPopMatrix();
+
+	//Right Connector
+	glPushMatrix();
+	glTranslatef(width / 2, height, 0);
+	glScalef(1, 1, (1 / thick) * distance);
+	glRotatef(-180, 1, 0, 0);
+	drawCylinder(thick, thick);
+	glPopMatrix();
+
+	//Back U bar
+	glPushMatrix();
+	glTranslatef(0, 0, -distance);
+	drawGoalPostBar(width, height, thick);
+	glPopMatrix();
+
+	glColor3f(0.95, 0.95, 1);
+	float spread = 0.5;
+	glLineWidth(2);
+	//Mesh Back
+	glPushMatrix();
+	glTranslatef(0, height / 2, -distance);
+	drawMesh(width, height, spread);
+	glPopMatrix();
+
+	//Mesh Left
+	glPushMatrix();
+	glTranslatef(-width / 2, height / 2, -distance / 2);
+	glRotatef(90, 0, 1, 0);
+	drawMesh(distance, height, spread);
+	glPopMatrix();
+
+	//Mesh Right
+	glPushMatrix();
+	glTranslatef(width / 2, height / 2, -distance / 2);
+	glRotatef(90, 0, 1, 0);
+	drawMesh(distance, height, spread);
+	glPopMatrix();
+
+	//Mesh Top
+	glPushMatrix();
+	glTranslatef(0, height, -distance / 2);
+	glRotatef(90, 1, 0, 0);
+	drawMesh(width, distance, spread);
+	glPopMatrix();
+}
+
+void allGoals() {
+	//Goal 1
+	glPushMatrix();
+	glColor3f(1, 1, 1);
+	glTranslatef(54, 2.7, 0);
+	glRotatef(-90, 0, 1, 0);
+	drawGoal(15, 0.2);
+	glPopMatrix();
+
+	//Goal 2
+	glPushMatrix();
+	glColor3f(1, 1, 1);
+	glTranslatef(-54, 2.7, 0);
+	glRotatef(180, 0, 1, 0);
+	glRotatef(-90, 0, 1, 0);
+	drawGoal(15, 0.2);
+	glPopMatrix();
+}
+
+
+/*______________________________________________________________________________________________________*/
+/*------------------------------------------------------------------------------------------------------*/
+											/* FOOT  BALL */
 
 void drawBall() {
 	glColor3f(1, 1, 1);
@@ -1356,6 +1243,153 @@ void drawBall() {
 }
 
 
+/*______________________________________________________________________________________________________*/
+/*------------------------------------------------------------------------------------------------------*/
+											/*  SEATS  */
+
+void drawChairComponent() {
+	glPushMatrix();
+	glTranslatef(0, 2, 0.5);
+	glScalef(8, 4, 1);
+	glutSolidCube(1);
+	glPopMatrix();
+
+	glPushMatrix();
+	glTranslatef(0, 4, -0.01);
+	drawCylinder(4, 1);
+	glPopMatrix();
+}
+
+void drawChair() {
+	glColor3f(1, 1, 1);
+	//Chair Back Rester
+	glPushMatrix();
+	glTranslatef(0, 1, 0);
+	drawChairComponent();
+	glPopMatrix();
+
+	glColor3f(1, 1, 1);
+	//Chair Seat
+	glPushMatrix();
+	glTranslatef(0, 1, 0);
+	glRotatef(90, 1, 0, 0);
+	drawChairComponent();
+	glPopMatrix();
+}
+
+void drawSeatRow(int row_length) {
+	glColor3f(1, 0, 0);
+	glPushMatrix();
+	glScalef(row_length, 1, 2);
+	glutSolidCube(1);
+	glPopMatrix();
+
+	for (int i = -(row_length / 2) + 1; i <= (row_length / 2) - 1; i += 2) {
+		glPushMatrix();
+		glTranslatef(i, 0.5, -0.70);
+		glScalef(0.2, 0.2, 0.2);
+		drawChair();
+		glPopMatrix();
+	}
+}
+
+void allSeats() {
+	//Left Seat Set
+	glPushMatrix();
+	glTranslatef(0, 9, 42);
+
+		glPushMatrix();
+		glRotatef(180, 0, 1, 0);
+		drawSeatRow(130);
+		glPopMatrix();
+
+		glTranslatef(0, 3, 3);
+		glPushMatrix();
+		glRotatef(180, 0, 1, 0);
+		drawSeatRow(138);
+		glPopMatrix();
+
+		glTranslatef(0, 3, 3);
+		glPushMatrix();
+		glRotatef(180, 0, 1, 0);
+		drawSeatRow(145);
+		glPopMatrix();
+
+	glPopMatrix();
+
+	//Right Seat Set
+	glPushMatrix();
+
+	glTranslatef(0, 9, -42);
+
+		glPushMatrix();
+		drawSeatRow(130);
+		glPopMatrix();
+
+		glTranslatef(0, 3, -3);
+		glPushMatrix();
+		drawSeatRow(138);
+		glPopMatrix();
+
+		glTranslatef(0, 3, -3);
+		glPushMatrix();
+		drawSeatRow(145);
+		glPopMatrix();
+
+	glPopMatrix();
+
+	//Front Seat Set
+	glPushMatrix();
+
+	glTranslatef(-68.5, 11.8, 0);
+	glRotatef(180, 0, 1, 0);
+
+		glPushMatrix();
+		glRotatef(-90, 0, 1, 0);
+		drawSeatRow(90);
+		glPopMatrix();
+
+		glTranslatef(3, 3, 0);
+		glPushMatrix();
+		glRotatef(-90, 0, 1, 0);
+		drawSeatRow(94);
+		glPopMatrix();
+
+		glTranslatef(-6, -6, 0);
+		glPushMatrix();
+		glRotatef(-90, 0, 1, 0);
+		drawSeatRow(84);
+		glPopMatrix();
+
+	glPopMatrix();
+
+	//Back Seat Set
+	glPushMatrix();
+
+	glTranslatef(68.5, 11.8, 0);
+
+		glPushMatrix();
+		glRotatef(-90, 0, 1, 0);
+		drawSeatRow(90);
+		glPopMatrix();
+
+		glTranslatef(3, 3, 0);
+		glPushMatrix();
+		glRotatef(-90, 0, 1, 0);
+		drawSeatRow(94);
+		glPopMatrix();
+
+		glTranslatef(-6, -6, 0);
+		glPushMatrix();
+		glRotatef(-90, 0, 1, 0);
+		drawSeatRow(84);
+		glPopMatrix();
+
+	glPopMatrix();
+}
+
+
+/*______________________________________________________________________________________________________*/
 										    /*  DISPLAY  */
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
 /*______________________________________________________________________________________________________*/
@@ -1373,7 +1407,7 @@ void display() {
 	
 	//Camera to view Chair
 	if (seat == 1)
-		gluLookAt(50 + camX, 40 + camY, 0 + camZ, 0, 0, 0, 0, 1, 0);
+		gluLookAt(66 + camX, 22 + camY, 0 + camZ, 0, 0, 0, 0, 1, 0);
 
 	////////////////////////////////////////////////////////////////
 	Lighting();
@@ -1381,31 +1415,22 @@ void display() {
 	float width = 120, height = 75;
 
 	//Base Foundation
-	glColor3f(0.8, 0.8, 0.8);
-	glPushMatrix();
-	glScalef(250, 1, 180);
-	glutSolidCube(1);
-	glPopMatrix();
+	drawFoundation();
 
 	//Feild
 	drawFeild(width, height);
+	
+	//Lines
+	drawFeildLines();
 
 	//Wall IN
-	glColor3f(0.5, 0.5, 0.2);
-	drawWalls(width, height, 5, 1);
+	drawWalls(width, height, 5, 1, 0.5, 0.5, 0.2);
 
 	//Wall Out   // ( height / width ) * 130 = 81.25
-	glColor3f(0.9, 0.6, 0.2);
-	drawWalls(width + 10, 81.25, 8, 1);  
+	drawWalls(width + 10, 81.25, 8, 1, 0.9, 0.6, 0.2);  
 
 	//Stage
 	allStage();
-
-	//Goals
-	allGoals();
-
-	//Lines
-	drawFeildLines();
 
 	//Flags
 	allFlags();
@@ -1422,21 +1447,93 @@ void display() {
 	//Player
 	allPlayers();
 
+	//Goals
+	allGoals();
+
 	//Ball
 	drawBall();
 
 	//Seats
 	if (seat == 1) allSeats();
 
-
 	////////////////////////////////////////////////////////////////
 	glPopMatrix();
 	glutSwapBuffers();
 }
 
-											/*  MAIN FUNCTIONS  */
-//////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 /*______________________________________________________________________________________________________*/
+/*------------------------------------------------------------------------------------------------------*/
+											/*  MAIN FUNCTIONS  */
+
+void timer(int x) {
+	if (timeCount == 16) {
+		if (r == 1) r = 0;
+		else r = 1;
+		timeCount = 0;
+	}
+	timeCount++;
+
+	if (hitBall == 1 && hit > -30) hit -= 35;
+
+	if (hit <= 0 && ballX < 183) {
+		ballRotation += 35;
+		ballX += 6.5;
+		ballZ += 1.6;
+		keeper += 0.32;
+	}
+
+	glutPostRedisplay();
+	glutTimerFunc(30, timer, 1);
+}
+
+void keyboard(unsigned char key, int x, int y) {
+
+	if (key == 'z')	camZ += cam_speed;
+	if (key == 'Z')	camZ -= cam_speed;
+
+	if (key == 'b')	hitBall = 1;
+
+	if (key == '1') glEnable(GL_LIGHT0);
+	if (key == '!') glDisable(GL_LIGHT0);
+
+	if (key == '2') glEnable(GL_LIGHT1);
+	if (key == '@') glDisable(GL_LIGHT1);
+
+	if (key == '3') glEnable(GL_LIGHT2);
+	if (key == '#') glDisable(GL_LIGHT2);
+
+	if (key == 't') tv = 1;
+	if (key == 'T') tv = 0;
+
+	//RESET THE CAMERA AND SWITCH SEATS
+	if (key == 's')	{
+		camX = 0;
+		camY = 0;
+		camZ = 0;
+		seat = 0;
+	}
+
+	if (key == 'S') {
+		camX = 0;
+		camY = 0;
+		camZ = 0;
+		seat = 1;
+	}
+
+	if (key == 27) exit(0);
+
+	glutPostRedisplay();
+}
+
+void keyboardSpecial(int key, int x, int y) {
+	if (key == GLUT_KEY_RIGHT)	camX += cam_speed;
+	if (key == GLUT_KEY_LEFT)	camX -= cam_speed;
+	if (key == GLUT_KEY_UP)		camY += cam_speed;
+	if (key == GLUT_KEY_DOWN)	camY -= cam_speed;
+
+	glutPostRedisplay();
+}
 
 void init() {
 	glClearColor(0, 0, 0, 0);
@@ -1457,70 +1554,6 @@ void reshape(GLsizei w, GLsizei h) {
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	gluPerspective(120.0, aspect, 1.0, 200.0);
-}
-
-void timer(int x) {
-	if (timeCount == 16) {
-		if (r == 1) r = 0;
-		else r = 1;
-		timeCount = 0;
-	}
-	timeCount++;
-
-	if ( hitBall == 1 && ballX < 189) {
-		ballRotation += 35;
-		ballX += 4.5;
-		ballZ += 1.6;
-		keeper += 0.2;
-	}
-
-	glutPostRedisplay();
-	glutTimerFunc(60, timer, 1);
-}
-
-void keyboardSpecial(int key, int x, int y) {
-	if (key == GLUT_KEY_RIGHT)	camX += 1;
-	if (key == GLUT_KEY_LEFT)	camX -= 1;
-	if (key == GLUT_KEY_UP)		camY += 1;
-	if (key == GLUT_KEY_DOWN)	camY -= 1;
-
-	glutPostRedisplay();
-}
-
-void keyboard(unsigned char key, int x, int y) {
-	if (key == 'z')	camZ += 1;
-	if (key == 'Z')	camZ -= 1;
-
-	if (key == 'b')	hitBall = 1;
-
-	if (key == '1') glEnable(GL_LIGHT0);
-	if (key == '!') glDisable(GL_LIGHT0);
-
-	if (key == '2') glEnable(GL_LIGHT1);
-	if (key == '@') glDisable(GL_LIGHT1);
-
-	if (key == '3') glEnable(GL_LIGHT2);
-	if (key == '#') glDisable(GL_LIGHT2);
-
-
-	//RESET THE CAMERA AND SWITCH SEATS
-	if (key == 's')	{
-		camX = 0;
-		camY = 0;
-		camZ = 0;
-		seat = 0;
-	}
-
-	if (key == 'S') {
-		camX = 0;
-		camY = 0;
-		camZ = 0;
-		seat = 1;
-	}
-
-	if (key == 27) exit(0);
-
-	glutPostRedisplay();
 }
 
 int main(int argc, char** argv) {
